@@ -7,6 +7,15 @@ set -eu
 DATA_DIR="${GARCON_DATA_DIR:-/data}"
 HOME="${HOME:-/home/garcon}"
 
+# The image runs as uid 1000; a volume owned by anyone else otherwise surfaces
+# as a bare "mkdir: permission denied" several lines down.
+if [ ! -w "${DATA_DIR}" ]; then
+    echo "garcon: ${DATA_DIR} is not writable by $(id -un) (uid $(id -u), gid $(id -g))." >&2
+    echo "garcon: on Kubernetes set securityContext.fsGroup: 1000 on the pod;" >&2
+    echo "garcon: with a bind mount, chown -R 1000:1000 the host directory." >&2
+    exit 1
+fi
+
 mkdir -p \
     "${DATA_DIR}/.garcon" \
     "${DATA_DIR}/.claude" \

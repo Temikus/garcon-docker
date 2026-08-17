@@ -64,6 +64,7 @@ jobs:
           GARCON_VERSION: ${{ steps.pins.outputs.garcon }}
           RUN_NUMBER: ${{ github.run_number }}
         run: |
+          DATETIME_TAG=$(date -u +%Y%m%d%H%M)
           docker build \
             --build-arg GARCON_BASE_IMAGE=garcon-upstream:local \
             --build-arg "GARCON_VERSION=${GARCON_VERSION}" \
@@ -71,6 +72,7 @@ jobs:
             --build-arg "VCS_REF=${GITHUB_SHA::7}" \
             -t "${IMAGE}:${GARCON_VERSION}" \
             -t "${IMAGE}:${GARCON_VERSION}-${RUN_NUMBER}" \
+            -t "${IMAGE}:${GARCON_VERSION}-${DATETIME_TAG}" \
             .
 
       - name: Smoke-test image
@@ -92,5 +94,7 @@ jobs:
           GARCON_VERSION: ${{ steps.pins.outputs.garcon }}
           RUN_NUMBER: ${{ github.run_number }}
         run: |
+          DATETIME_TAG=$(date -u +%Y%m%d%H%M)
           docker push "${IMAGE}:${GARCON_VERSION}"
           docker push "${IMAGE}:${GARCON_VERSION}-${RUN_NUMBER}"
+          docker push "${IMAGE}:${GARCON_VERSION}-${DATETIME_TAG}"

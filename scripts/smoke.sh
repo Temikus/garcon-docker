@@ -8,12 +8,17 @@ set -euo pipefail
 IMAGE="${1:?usage: smoke.sh <image>}"
 PORT="${SMOKE_PORT:-18080}"
 NAME="garcon-smoke-$$"
+# A named volume inherits /data's ownership from the image, which is the path
+# the README tells people to use. A bind mount would arrive owned by whoever
+# ran this and trip the entrypoint's own guard - see the negative test below.
+VOLUME="garcon-smoke-$$"
 DATA="$(mktemp -d)"
 
 failures=0
 
 cleanup() {
     docker rm -f "${NAME}" >/dev/null 2>&1 || true
+    docker volume rm "${VOLUME}" >/dev/null 2>&1 || true
     rm -rf "${DATA}"
 }
 trap cleanup EXIT
@@ -31,7 +36,7 @@ check() {
 echo "== booting ${IMAGE} =="
 docker run -d --init --name "${NAME}" \
     -p "${PORT}:8080" \
-    -v "${DATA}:/data" \
+    -v "${VOLUME}:/data" \
     "${IMAGE}" >/dev/null
 
 # The server logs this line once it is accepting connections.
@@ -96,6 +101,25 @@ for link in .amp .config; do
     check "\$HOME/${link} is a symlink" "symbolic link" \
         "$(docker exec "${NAME}" stat -c '%F' "/home/garcon/${link}")"
 done
+
+echo
+echo "== unwritable /data is rejected =="
+# Read-only so this holds regardless of how the host maps bind-mount ownership.
+guard_output="$(docker run --rm -v "${DATA}:/data:ro" "${IMAGE}" 2>&1 || true)"
+case "${guard_output}" in
+    *"is not writable by garcon"*)
+        printf 'ok   %-34s %s\n' "guard message" "present" ;;
+    *)
+        printf 'FAIL %-34s got %q\n' "guard message" "${guard_output}"
+        failures=$((failures + 1)) ;;
+esac
+
+if docker run --rm -v "${DATA}:/data:ro" "${IMAGE}" >/dev/null 2>&1; then
+    printf 'FAIL %-34s exited 0, expected non-zero\n' "guard exit status"
+    failures=$((failures + 1))
+else
+    printf 'ok   %-34s %s\n' "guard exit status" "non-zero"
+fi
 
 echo
 if [ "${failures}" -ne 0 ]; then

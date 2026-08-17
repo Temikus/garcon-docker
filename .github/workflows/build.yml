@@ -1,0 +1,91 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/temikus/garcon
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out this repo
+        uses: actions/checkout@v5
+
+      # Versions live in the Dockerfile ARGs so Renovate has a single place to bump.
+      - name: Read pinned versions
+        id: pins
+        run: |
+          garcon="$(sed -n 's/^ARG GARCON_VERSION=//p' Dockerfile | head -1)"
+          bun="$(sed -n 's/^ARG BUN_TAG=//p' Dockerfile | head -1)"
+          case "$garcon" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::unexpected GARCON_VERSION: $garcon"; exit 1 ;;
+          esac
+          case "$bun" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::unexpected BUN_TAG: $bun"; exit 1 ;;
+          esac
+          {
+            echo "garcon=$garcon"
+            echo "bun=$bun"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check out garcon upstream
+        uses: actions/checkout@v5
+        with:
+          repository: cfal/garcon
+          ref: v${{ steps.pins.outputs.garcon }}
+          path: upstream
+
+      - name: Build upstream base image
+        env:
+          BUN_TAG: ${{ steps.pins.outputs.bun }}
+        run: |
+          docker build \
+            --build-arg "BUN_TAG=${BUN_TAG}" \
+            -t garcon-upstream:local \
+            upstream
+
+      - name: Build image
+        env:
+          GARCON_VERSION: ${{ steps.pins.outputs.garcon }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          docker build \
+            --build-arg GARCON_BASE_IMAGE=garcon-upstream:local \
+            --build-arg "GARCON_VERSION=${GARCON_VERSION}" \
+            --build-arg "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --build-arg "VCS_REF=${GITHUB_SHA::7}" \
+            -t "${IMAGE}:${GARCON_VERSION}" \
+            -t "${IMAGE}:${GARCON_VERSION}-${RUN_NUMBER}" \
+            .
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        if: github.event_name != 'pull_request'
+        env:
+          GARCON_VERSION: ${{ steps.pins.outputs.garcon }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          docker push "${IMAGE}:${GARCON_VERSION}"
+          docker push "${IMAGE}:${GARCON_VERSION}-${RUN_NUMBER}"

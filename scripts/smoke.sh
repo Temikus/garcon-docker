@@ -60,7 +60,7 @@ check "username" "garcon" "$(docker exec "${NAME}" id -un)"
 
 echo
 echo "== agents on PATH =="
-for bin in claude codex opencode amp gh git; do
+for bin in claude codex opencode amp gh git mise; do
     path="$(docker exec "${NAME}" sh -c "command -v ${bin} || true")"
     if [ -z "${path}" ]; then
         printf 'FAIL %-34s not on PATH\n' "${bin}"

@@ -35,6 +35,19 @@ build: fetch
         -t {{ image }}:{{ garcon_version }} \
         .
 
+# Lint the Dockerfile and entrypoint
+lint:
+    docker run --rm -i hadolint/hadolint < Dockerfile
+    docker run --rm -v "{{ justfile_directory() }}:/mnt" -w /mnt koalaman/shellcheck \
+        entrypoint.sh scripts/smoke.sh
+
+# Smoke-test the built image
+test:
+    ./scripts/smoke.sh {{ image }}:{{ garcon_version }}
+
+# Lint + tests
+check: lint test
+
 # Push the built image
 push:
     docker push {{ image }}:{{ garcon_version }}

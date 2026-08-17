@@ -48,7 +48,17 @@ ENV GARCON_DATA_DIR=/data \
 COPY entrypoint.sh /usr/local/bin/garcon-entrypoint.sh
 RUN chmod 0755 /usr/local/bin/garcon-entrypoint.sh
 
+# Upstream sets HOME=/home/garcon but never creates the user, so the image runs
+# as root. The bun base already holds uid/gid 1000; renaming it is the only way
+# to land on 1000 (useradd --uid 1000 would collide).
+RUN usermod --login garcon --home /home/garcon bun \
+    && groupmod --new-name garcon bun \
+    && mkdir -p /data \
+    && chown -R garcon:garcon /home/garcon /data
+
 VOLUME ["/data"]
+
+USER garcon
 
 ENTRYPOINT ["/usr/local/bin/garcon-entrypoint.sh"]
 CMD ["bun", "server/main.ts"]

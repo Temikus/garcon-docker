@@ -41,7 +41,7 @@ ARG MISE_VERSION=2026.8.6
 RUN curl -fsSL "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64.tar.gz" \
         -o /tmp/mise.tar.gz \
     && tar -xzf /tmp/mise.tar.gz -C /tmp \
-    && install -m0755 /tmp/mise /usr/local/bin/mise \
+    && install -m0755 /tmp/mise/bin/mise /usr/local/bin/mise \
     && rm -rf /tmp/mise.tar.gz /tmp/mise
 ENV MISE_DATA_DIR=/data/.mise
 ENV MISE_CONFIG_DIR=/data/.mise

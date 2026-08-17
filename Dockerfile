@@ -35,6 +35,18 @@ RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_$
     && install -m0755 "/tmp/gh_${GH_VERSION}_linux_amd64/bin/gh" /usr/local/bin/gh \
     && rm -rf /tmp/gh.tar.gz "/tmp/gh_${GH_VERSION}_linux_amd64"
 
+# mise - version manager for tools (node, python, go, etc.)
+# renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.*)$
+ARG MISE_VERSION=2025.0.23
+RUN curl -fsSL "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64.tar.gz" \
+        -o /tmp/mise.tar.gz \
+    && tar -xzf /tmp/mise.tar.gz -C /tmp \
+    && install -m0755 /tmp/mise /usr/local/bin/mise \
+    && rm -rf /tmp/mise.tar.gz /tmp/mise
+ENV MISE_DATA_DIR=/data/.mise
+ENV MISE_CONFIG_DIR=/data/.mise
+ENV PATH="${MISE_DATA_DIR}/shims:${PATH}"
+
 # Everything stateful lives under a single mounted volume so one PVC is enough.
 # The paths that garcon/agents expose as env vars are pointed at it directly;
 # the rest are symlinked in by the entrypoint.
@@ -53,7 +65,7 @@ RUN chmod 0755 /usr/local/bin/garcon-entrypoint.sh
 # to land on 1000 (useradd --uid 1000 would collide).
 RUN usermod --login garcon --home /home/garcon bun \
     && groupmod --new-name garcon bun \
-    && mkdir -p /data \
+    && mkdir -p /data /data/.mise \
     && chown -R garcon:garcon /home/garcon /data
 
 VOLUME ["/data"]

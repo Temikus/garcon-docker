@@ -28,7 +28,7 @@ LABEL maintainer="temikus" \
 
 # gh unlocks garcon's Pull Requests tab; upstream leaves it out of the image.
 # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.*)$
-ARG GH_VERSION=2.97.0
+ARG GH_VERSION=2.98.0
 RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" \
         -o /tmp/gh.tar.gz \
     && tar -xzf /tmp/gh.tar.gz -C /tmp \

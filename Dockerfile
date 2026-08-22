@@ -37,7 +37,7 @@ RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_$
 
 # mise - version manager for tools (node, python, go, etc.)
 # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.*)$
-ARG MISE_VERSION=2026.8.6
+ARG MISE_VERSION=2026.8.10
 RUN curl -fsSL "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64.tar.gz" \
         -o /tmp/mise.tar.gz \
     && tar -xzf /tmp/mise.tar.gz -C /tmp \

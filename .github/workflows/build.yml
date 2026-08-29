@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Check out this repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # Versions live in the Dockerfile ARGs so Renovate has a single place to bump.
       - name: Read pinned versions
@@ -44,7 +44,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Check out garcon upstream
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: cfal/garcon
           ref: v${{ steps.pins.outputs.garcon }}

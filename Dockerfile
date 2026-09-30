@@ -7,7 +7,7 @@
 # renovate: datasource=github-releases depName=cfal/garcon extractVersion=^v(?<version>.*)$
 ARG GARCON_VERSION=0.3.3
 # renovate: datasource=docker depName=oven/bun
-ARG BUN_TAG=1.3.14
+ARG BUN_TAG=1.4.2
 ARG GARCON_BASE_IMAGE=garcon-upstream:local
 
 FROM ${GARCON_BASE_IMAGE}

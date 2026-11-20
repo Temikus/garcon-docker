@@ -7,7 +7,7 @@
 # renovate: datasource=github-releases depName=cfal/garcon extractVersion=^v(?<version>.*)$
 ARG GARCON_VERSION=0.4.1
 # renovate: datasource=docker depName=oven/bun
-ARG BUN_TAG=1.4.4
+ARG BUN_TAG=1.4.5
 ARG GARCON_BASE_IMAGE=garcon-upstream:local
 
 FROM ${GARCON_BASE_IMAGE}
@@ -28,7 +28,7 @@ LABEL maintainer="temikus" \
 
 # gh unlocks garcon's Pull Requests tab; upstream leaves it out of the image.
 # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.*)$
-ARG GH_VERSION=2.104.0
+ARG GH_VERSION=2.105.0
 RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" \
         -o /tmp/gh.tar.gz \
     && tar -xzf /tmp/gh.tar.gz -C /tmp \
@@ -37,7 +37,7 @@ RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_$
 
 # mise - version manager for tools (node, python, go, etc.)
 # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.*)$
-ARG MISE_VERSION=2026.11.8
+ARG MISE_VERSION=2026.11.10
 RUN curl -fsSL "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64.tar.gz" \
         -o /tmp/mise.tar.gz \
     && tar -xzf /tmp/mise.tar.gz -C /tmp \
